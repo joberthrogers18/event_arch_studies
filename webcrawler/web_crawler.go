@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"regexp"
+	"strings"
 
 	"github.com/gocolly/colly"
 )
@@ -18,13 +20,21 @@ type star struct {
 	Name  string
 	Photo string
 	// JobTitle  string
-	BirthData string
+	BirthDate string
+	DeathDate string
 	Bio       string
 	TopMovies []movie
 }
 
 func main() {
 	crawler()
+}
+
+func getDatesBirthAndDeath(data string) []string {
+	regCompile := regexp.MustCompile(`[A-Z][a-z]+\s[0-9]{1,2}\,\s[0-9]{4}`)
+	regex := regCompile.FindAllString(data, -1)
+
+	return regex
 }
 
 func crawler() {
@@ -49,33 +59,34 @@ func crawler() {
 		infoCollector.Visit(profileURL)
 	})
 
-	// c.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
-	// 	fmt.Println("============== Aquiiiiiiiii =================")
-	// 	nextPage := e.Request.AbsoluteURL(e.Attr("href"))
-	// 	fmt.Println(nextPage)
-	// 	c.Visit(nextPage)
-	// })
+	c.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
+		nextPage := e.Request.AbsoluteURL(e.Attr("href"))
+		fmt.Println(nextPage)
+		c.Visit(nextPage)
+	})
 
-	infoCollector.OnHTML("section.sc-781acd7f-0", func(e *colly.HTMLElement) {
-		fmt.Println(e.ChildText("h1"))
+	infoCollector.OnHTML(".ipc-page-wrapper.ipc-page-wrapper--base", func(e *colly.HTMLElement) {
 		tmpProfile := star{}
 		tmpProfile.Name = e.ChildText("h1 > span.sc-afe43def-1.fDTGTb")
 		tmpProfile.Photo = e.ChildAttr("img.ipc-image", "src")
-		tmpProfile.Bio = e.ChildText(".ipc-html-content--baseAlt > .ipc-html-content-inner-div")
-		// tmpProfile.JobTitle = e.ChildText("#name-job-categories > a > span.itemprop")
+		tmpProfile.Bio = strings.TrimSpace(e.ChildText(".ipc-html-content--baseAlt > .ipc-html-content-inner-div"))
 		birthDayStr := e.ChildText("span.sc-dec7a8b-2.haviXP:nth-child(2)")
-		// tmpProfile.BirthData = e.ChildTexts("div.sc-dec7a8b-1")
 		var middleStr int64 = int64(math.Round(float64(len(birthDayStr) / 2)))
-		fmt.Println(birthDayStr[middleStr:])
+		var datesActor []string = getDatesBirthAndDeath(birthDayStr[middleStr:])
 
-		// tmpProfile.Bio = strings.TrimSpace(e.ChildText("#name-bio-text > div.name-trivia-bio-text > div.inline"))
+		tmpProfile.BirthDate = datesActor[0]
 
-		// e.ForEach("div.knownfor-title", func(_ int, kf *colly.HTMLElement) {
-		// 	tmpMovie := movie{}
-		// 	tmpMovie.Title = kf.ChildText("div.knownfor-title-role > a.knownfor-ellipsis")
-		// 	tmpMovie.Year = kf.ChildText("div.knownfor-year > span.knownfor-ellipsis")
-		// 	tmpProfile.TopMovies = append(tmpProfile.TopMovies, tmpMovie)
-		// })
+		tmpProfile.DeathDate = "-"
+		if len(datesActor) > 1 {
+			tmpProfile.DeathDate = datesActor[1]
+		}
+
+		e.ForEach("div.ipc-list-card--span.ipc-list-card--border-line", func(_ int, kf *colly.HTMLElement) {
+			tmpMovie := movie{}
+			tmpMovie.Title = kf.ChildText("div.ipc-primary-image-list-card__content-top > a.ipc-primary-image-list-card__title")
+			tmpMovie.Year = kf.ChildText("div.ipc-primary-image-list-card__content-bottom > ul > li > span.ipc-primary-image-list-card__secondary-text")
+			tmpProfile.TopMovies = append(tmpProfile.TopMovies, tmpMovie)
+		})
 
 		js, err := json.MarshalIndent(tmpProfile, "", "    ")
 		if err != nil {
