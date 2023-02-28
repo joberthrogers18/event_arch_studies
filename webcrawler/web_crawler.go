@@ -7,6 +7,7 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 )
@@ -26,6 +27,8 @@ type star struct {
 	TopMovies []movie
 }
 
+var wg sync.WaitGroup
+
 func getDatesBirthAndDeath(data string) []string {
 	regCompile := regexp.MustCompile(`[A-Z][a-z]+\s[0-9]{1,2}\,\s[0-9]{4}`)
 	regex := regCompile.FindAllString(data, -1)
@@ -33,37 +36,18 @@ func getDatesBirthAndDeath(data string) []string {
 	return regex
 }
 
-func getURLsPage() []string {
-	var URLList []string
-
-	collyInst := colly.NewCollector(
-		colly.AllowedDomains("imdb.com", "www.imdb.com"),
-	)
-
-	collyInst.OnRequest(func(r *colly.Request) {
-		URLList = append(URLList, r.URL.String())
-	})
-
-	collyInst.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
-		var nextPage string = e.Request.AbsoluteURL(e.Attr("href"))
-		URLList = append(URLList, nextPage)
-		collyInst.Visit(nextPage)
-	})
-
-	collyInst.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
-
-	return URLList
-}
-
 func crawler(url string) {
-	c := colly.NewCollector(
+	defer wg.Done()
+
+	collyInstMain := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
-		colly.Async(true),
+		// colly.Async(true),
 	)
 
-	infoCollector := c.Clone()
+	// collyInstMain := collyInst.Clone()
+	infoCollector := collyInstMain.Clone()
 
-	c.OnRequest(func(r *colly.Request) {
+	collyInstMain.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting: ", r.URL.String())
 	})
 
@@ -71,17 +55,11 @@ func crawler(url string) {
 		fmt.Println("Visiting Profile URL: ", r.URL.String())
 	})
 
-	c.OnHTML(".mode-detail", func(e *colly.HTMLElement) {
+	collyInstMain.OnHTML(".mode-detail", func(e *colly.HTMLElement) {
 		profileURL := e.ChildAttr("div.lister-item-image > a", "href")
 		profileURL = e.Request.AbsoluteURL(profileURL)
 		fmt.Println(profileURL)
 		infoCollector.Visit(profileURL)
-	})
-
-	c.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
-		nextPage := e.Request.AbsoluteURL(e.Attr("href"))
-		fmt.Println(nextPage)
-		c.Visit(nextPage)
 	})
 
 	infoCollector.OnHTML(".ipc-page-wrapper.ipc-page-wrapper--base", func(e *colly.HTMLElement) {
@@ -114,12 +92,28 @@ func crawler(url string) {
 		fmt.Println(string(js))
 	})
 
-	c.Visit(url)
+	collyInstMain.Visit(url)
 }
 
 func main() {
-	var UrlList []string = getURLsPage()
-	fmt.Println(len(UrlList))
 
-	// crawler()
+	collyInst := colly.NewCollector(
+		colly.AllowedDomains("imdb.com", "www.imdb.com"),
+	)
+
+	// collyInstClone := collyInst.Clone()
+
+	collyInst.OnRequest(func(r *colly.Request) {
+		fmt.Println(r.URL.String())
+		wg.Add(1)
+		go crawler(r.URL.String())
+	})
+
+	collyInst.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
+		var nextPage string = e.Request.AbsoluteURL(e.Attr("href"))
+		collyInst.Visit(nextPage)
+	})
+
+	collyInst.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
+	wg.Wait()
 }
