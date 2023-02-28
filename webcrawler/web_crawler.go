@@ -26,10 +26,6 @@ type star struct {
 	TopMovies []movie
 }
 
-func main() {
-	crawler()
-}
-
 func getDatesBirthAndDeath(data string) []string {
 	regCompile := regexp.MustCompile(`[A-Z][a-z]+\s[0-9]{1,2}\,\s[0-9]{4}`)
 	regex := regCompile.FindAllString(data, -1)
@@ -37,9 +33,32 @@ func getDatesBirthAndDeath(data string) []string {
 	return regex
 }
 
-func crawler() {
+func getURLsPage() []string {
+	var URLList []string
+
+	collyInst := colly.NewCollector(
+		colly.AllowedDomains("imdb.com", "www.imdb.com"),
+	)
+
+	collyInst.OnRequest(func(r *colly.Request) {
+		URLList = append(URLList, r.URL.String())
+	})
+
+	collyInst.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
+		var nextPage string = e.Request.AbsoluteURL(e.Attr("href"))
+		URLList = append(URLList, nextPage)
+		collyInst.Visit(nextPage)
+	})
+
+	collyInst.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
+
+	return URLList
+}
+
+func crawler(url string) {
 	c := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
+		colly.Async(true),
 	)
 
 	infoCollector := c.Clone()
@@ -95,6 +114,12 @@ func crawler() {
 		fmt.Println(string(js))
 	})
 
-	c.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
-	// infoCollector.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
+	c.Visit(url)
+}
+
+func main() {
+	var UrlList []string = getURLsPage()
+	fmt.Println(len(UrlList))
+
+	// crawler()
 }
