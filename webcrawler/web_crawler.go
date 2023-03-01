@@ -44,14 +44,13 @@ func crawler(url string) {
 		// colly.Async(true),
 	)
 
-	// collyInstMain := collyInst.Clone()
-	infoCollector := collyInstMain.Clone()
+	infoCollectorInst := collyInstMain.Clone()
 
 	collyInstMain.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting: ", r.URL.String())
 	})
 
-	infoCollector.OnRequest(func(r *colly.Request) {
+	infoCollectorInst.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting Profile URL: ", r.URL.String())
 	})
 
@@ -59,10 +58,10 @@ func crawler(url string) {
 		profileURL := e.ChildAttr("div.lister-item-image > a", "href")
 		profileURL = e.Request.AbsoluteURL(profileURL)
 		fmt.Println(profileURL)
-		infoCollector.Visit(profileURL)
+		infoCollectorInst.Visit(profileURL)
 	})
 
-	infoCollector.OnHTML(".ipc-page-wrapper.ipc-page-wrapper--base", func(e *colly.HTMLElement) {
+	infoCollectorInst.OnHTML(".ipc-page-wrapper.ipc-page-wrapper--base", func(e *colly.HTMLElement) {
 		tmpProfile := star{}
 		tmpProfile.Name = e.ChildText("h1 > span.sc-afe43def-1.fDTGTb")
 		tmpProfile.Photo = e.ChildAttr("img.ipc-image", "src")
@@ -100,8 +99,6 @@ func main() {
 	collyInst := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
 	)
-
-	// collyInstClone := collyInst.Clone()
 
 	collyInst.OnRequest(func(r *colly.Request) {
 		fmt.Println(r.URL.String())
