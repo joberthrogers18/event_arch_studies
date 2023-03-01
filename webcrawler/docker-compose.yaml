@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER=admin
+      RABBITMQ_DEFAULT_PASS=admin
+    networks:
+      - app_network
+  app:
+    build:
+      context: .
+    depends_on:
+      - rabbitmq
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: overlay
