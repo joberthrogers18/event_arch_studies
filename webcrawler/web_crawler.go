@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gocolly/colly"
 )
 
@@ -41,7 +42,6 @@ func crawler(url string) {
 
 	collyInstMain := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
-		// colly.Async(true),
 	)
 
 	infoCollectorInst := collyInstMain.Clone()
@@ -94,7 +94,7 @@ func crawler(url string) {
 	collyInstMain.Visit(url)
 }
 
-func main() {
+func startWebCrawler() {
 
 	collyInst := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
@@ -113,4 +113,15 @@ func main() {
 
 	collyInst.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
 	wg.Wait()
+}
+
+func main() {
+	r := gin.Default()
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "test",
+		})
+	})
+
+	r.Run()
 }
