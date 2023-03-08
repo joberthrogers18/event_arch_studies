@@ -2,7 +2,7 @@ package kafka
 
 import ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
-func Cosume(topics []string, server string, msgChan chan *ckafka.Message) {
+func Consume(topics []string, server string, msgChan chan *ckafka.Message) {
 	kafkaConsumer, err := ckafka.NewConsumer(&ckafka.ConfigMap{
 		"bootstrap.servers": server,
 		"group.id":          "goapp",
