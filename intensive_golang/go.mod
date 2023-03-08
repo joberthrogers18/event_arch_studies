@@ -3,6 +3,7 @@ module github.com/joberthrogers18/intesinve_golang
 go 1.19
 
 require (
+	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/stretchr/testify v1.8.2
 )
