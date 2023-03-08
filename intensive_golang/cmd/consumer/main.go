@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./order.db")
+	db, err := sql.Open("sqlite3", "./orders.db")
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 
 	msgChanKafka := make(chan *ckafka.Message)
 	topics := []string{"orders"}
-	servers := "host.docker.internal:9094"
+	servers := "kafka:9094"
 	fmt.Println("Kafka consumer has started")
 	go kafka.Consume(topics, servers, msgChanKafka)
 	kafkaWorker(msgChanKafka, usecase)

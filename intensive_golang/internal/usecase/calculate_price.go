@@ -18,7 +18,7 @@ type OrderOutputDTO struct {
 }
 
 type CalculateFinalPrice struct {
-	OrderRepository *entity.OrderRepositoryInterface
+	OrderRepository entity.OrderRepositoryInterface
 }
 
 func (c *CalculateFinalPrice) Execute(input OrderInputDTO) (*OrderOutputDTO, error) {
