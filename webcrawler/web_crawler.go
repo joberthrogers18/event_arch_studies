@@ -28,6 +28,7 @@ type star struct {
 	TopMovies []movie
 }
 
+var wgMain sync.WaitGroup
 var wg sync.WaitGroup
 
 func getDatesBirthAndDeath(data string) []string {
@@ -70,7 +71,10 @@ func crawler(url string) {
 		var middleStr int64 = int64(math.Round(float64(len(birthDayStr) / 2)))
 		var datesActor []string = getDatesBirthAndDeath(birthDayStr[middleStr:])
 
-		tmpProfile.BirthDate = datesActor[0]
+		tmpProfile.BirthDate = "-"
+		if len(datesActor) > 0 {
+			tmpProfile.BirthDate = datesActor[0]
+		}
 
 		tmpProfile.DeathDate = "-"
 		if len(datesActor) > 1 {
@@ -117,11 +121,16 @@ func startWebCrawler() {
 
 func main() {
 	r := gin.Default()
+
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "test",
-		})
+		fmt.Println("A new webCrawler was started in go routine")
+		// wgMain.Add(1)
+		go startWebCrawler()
 	})
 
-	r.Run()
+	err := r.Run()
+
+	if err != nil {
+		panic("[Error] failed to started Gin server due to: " + err.Error())
+	}
 }
