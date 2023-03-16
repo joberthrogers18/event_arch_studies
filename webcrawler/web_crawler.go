@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocolly/colly"
+	"github.com/streadway/amqp"
 )
 
 type movie struct {
@@ -28,7 +29,6 @@ type star struct {
 	TopMovies []movie
 }
 
-var wgMain sync.WaitGroup
 var wg sync.WaitGroup
 
 func getDatesBirthAndDeath(data string) []string {
@@ -119,12 +119,25 @@ func startWebCrawler() {
 	wg.Wait()
 }
 
+func initializeRabbitMq() {
+	fmt.Println("RabbitMQ: Getting started")
+
+	connection, err := amqp.Dial("amqp:guest:guest@localhost:5672/")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer connection.Close()
+
+	fmt.Println("Successfully connected to RabbitMQ instance")
+}
+
 func main() {
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
 		fmt.Println("A new webCrawler was started in go routine")
-		// wgMain.Add(1)
 		go startWebCrawler()
 	})
 
