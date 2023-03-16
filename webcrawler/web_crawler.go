@@ -38,7 +38,7 @@ func getDatesBirthAndDeath(data string) []string {
 	return regex
 }
 
-func crawler(url string) {
+func crawler(url string, channel *amqp.Channel) {
 	defer wg.Done()
 
 	collyInstMain := colly.NewCollector(
@@ -93,12 +93,27 @@ func crawler(url string) {
 			log.Fatal(err)
 		}
 		fmt.Println(string(js))
+
+		err = channel.Publish(
+			"",
+			"testing",
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(string(js)),
+			},
+		)
+
+		if err != nil {
+			fmt.Println("Not Published in queue")
+		}
 	})
 
 	collyInstMain.Visit(url)
 }
 
-func startWebCrawler() {
+func startWebCrawler(channel *amqp.Channel) {
 
 	collyInst := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
@@ -107,7 +122,7 @@ func startWebCrawler() {
 	collyInst.OnRequest(func(r *colly.Request) {
 		fmt.Println(r.URL.String())
 		wg.Add(1)
-		go crawler(r.URL.String())
+		go crawler(r.URL.String(), channel)
 	})
 
 	collyInst.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
@@ -119,7 +134,7 @@ func startWebCrawler() {
 	wg.Wait()
 }
 
-func initializeRabbitMq() {
+func initializeRabbitMq() *amqp.Channel {
 	fmt.Println("RabbitMQ: Getting started")
 
 	connection, err := amqp.Dial("amqp:guest:guest@localhost:5672/")
@@ -130,15 +145,40 @@ func initializeRabbitMq() {
 
 	defer connection.Close()
 
-	fmt.Println("Successfully connected to RabbitMQ instance")
+	fmt.Print("Successfully connected to RabbitMQ instance \n\n")
+
+	channel, err := connection.Channel()
+	if err != nil {
+		panic(err)
+	}
+
+	defer channel.Close()
+
+	queue, err := channel.QueueDeclare(
+		"testing",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Queue status:", queue)
+
+	return channel
 }
 
 func main() {
+	channel := initializeRabbitMq()
+
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
 		fmt.Println("A new webCrawler was started in go routine")
-		go startWebCrawler()
+		go startWebCrawler(channel)
 	})
 
 	err := r.Run()
