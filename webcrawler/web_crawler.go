@@ -182,7 +182,7 @@ var publisher *rabbitmq.Publisher
 // 	fmt.Println("Queue status:", queue)
 // }
 
-func initializeRabbitMq2() {
+func initializeRabbitMq2() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	conn, err := rabbitmq.NewConn(
 		"amqp://guest:guest@localhost",
 		rabbitmq.WithConnectionOptionsLogging,
@@ -192,7 +192,7 @@ func initializeRabbitMq2() {
 		log.Fatal(err)
 	}
 
-	defer conn.Close()
+	// defer conn.Close()
 
 	publisher, err = rabbitmq.NewPublisher(
 		conn,
@@ -205,12 +205,14 @@ func initializeRabbitMq2() {
 		log.Fatal(err)
 	}
 
-	defer publisher.Close()
+	// defer publisher.Close()
+
+	return conn, publisher
 }
 
 func main() {
 	// initializeRabbitMq()
-	initializeRabbitMq2()
+	conn, publisher := initializeRabbitMq2()
 
 	err := publisher.PublishWithContext(
 		context.Background(),
@@ -221,6 +223,9 @@ func main() {
 		rabbitmq.WithPublishOptionsPersistentDelivery,
 		rabbitmq.WithPublishOptionsExchange("events"),
 	)
+
+	defer conn.Close()
+	defer publisher.Close()
 
 	if err != nil {
 		log.Println(err)
