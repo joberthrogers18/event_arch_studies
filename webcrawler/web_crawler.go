@@ -30,11 +30,6 @@ type star struct {
 	TopMovies []movie
 }
 
-// var (
-// 	conn = &amqp.Connection{}
-// 	ch   = &amqp.Channel{}
-// )
-
 var wg sync.WaitGroup
 
 func getDatesBirthAndDeath(data string) []string {
@@ -100,28 +95,6 @@ func crawler(url string, publisher *rabbitmq.Publisher) {
 		}
 		fmt.Println(string(js))
 
-		// err = channel.Publish(
-		// 	"",
-		// 	"testing",
-		// 	false,
-		// 	false,
-		// 	amqp.Publishing{
-		// 		ContentType: "text/plain",
-		// 		Body:        []byte(string(js)),
-		// 	},
-		// )
-
-		// err = ch.Publish(
-		// 	"",        // exchange
-		// 	"testing", // key
-		// 	false,     // mandatory
-		// 	false,     // immediate
-		// 	amqp.Publishing{
-		// 		ContentType: "text/plain",
-		// 		Body:        []byte("Test Message"),
-		// 	},
-		// )
-
 		err = publisher.PublishWithContext(
 			context.Background(),
 			[]byte(js),
@@ -165,43 +138,6 @@ func startWebCrawler(publisher *rabbitmq.Publisher) {
 	wg.Wait()
 }
 
-// func initializeRabbitMq() {
-// 	fmt.Println("RabbitMQ: Getting started")
-
-// 	var err error
-// 	conn, err = amqp.Dial("amqp:guest:guest@localhost:5672/")
-
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	defer conn.Close()
-
-// 	fmt.Print("Successfully connected to RabbitMQ instance \n\n")
-
-// 	ch, err = conn.Channel()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	defer ch.Close()
-
-// 	queue, err := ch.QueueDeclare(
-// 		"testing",
-// 		false,
-// 		false,
-// 		false,
-// 		false,
-// 		nil,
-// 	)
-// 	if err != nil {
-// 		fmt.Println("Aquiiiii ==========")
-// 		panic(err)
-// 	}
-
-// 	fmt.Println("Queue status:", queue)
-// }
-
 func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	conn, err := rabbitmq.NewConn(
 		"amqp://guest:guest@localhost",
@@ -211,8 +147,6 @@ func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// defer conn.Close()
 
 	publisher, err := rabbitmq.NewPublisher(
 		conn,
@@ -224,8 +158,6 @@ func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// defer publisher.Close()
 
 	return conn, publisher
 }
