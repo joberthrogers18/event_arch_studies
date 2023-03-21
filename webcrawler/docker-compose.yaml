@@ -11,13 +11,26 @@ services:
       RABBITMQ_DEFAULT_PASS=admin
     networks:
       - app_network
-  app:
-    build:
+
+  producer:
+    build: 
       context: .
+      dockerfile: producer/Dockerfile
     depends_on:
       - rabbitmq
     ports:
-      - "3000:3000"
+      - "8080:8080"
+    networks:
+      - app_network
+
+  consumer:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    depends_on:
+      - rabbitmq
+    ports:
+      - "8081:8081"
     networks:
       - app_network
 

@@ -140,7 +140,7 @@ func startWebCrawler(publisher *rabbitmq.Publisher) {
 
 func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@localhost",
+		"amqp://guest:guest@rabbitmq:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 
@@ -163,7 +163,6 @@ func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 }
 
 func main() {
-	// initializeRabbitMq()
 	conn, publisher := initializeRabbitMq()
 
 	defer conn.Close()
@@ -176,7 +175,7 @@ func main() {
 		go startWebCrawler(publisher)
 	})
 
-	err := r.Run()
+	err := r.Run(":8080")
 
 	if err != nil {
 		panic("[Error] failed to started Gin server due to: " + err.Error())
