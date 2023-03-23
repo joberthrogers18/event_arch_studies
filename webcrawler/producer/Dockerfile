@@ -8,8 +8,8 @@ COPY ../go.sum ./
 
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
-RUN go build -o ./web-crawler.go
+RUN ls && go build ./producer/web-crawler.go
 
 CMD [ "./web-crawler" ]

@@ -8,8 +8,8 @@ COPY ../go.sum ./
 
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
-RUN go build -o ./consumer.go
+RUN go build ./consumer/consumer.go
 
 CMD [ "./consumer" ]
