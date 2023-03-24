@@ -140,12 +140,12 @@ func startWebCrawler(publisher *rabbitmq.Publisher) {
 
 func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@rabbitmq:5672/",
+		"amqp://rabbitmq:rabbitmq@rabbitmq1/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	publisher, err := rabbitmq.NewPublisher(
@@ -156,7 +156,7 @@ func initializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	return conn, publisher

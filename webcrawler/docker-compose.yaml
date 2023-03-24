@@ -1,7 +1,13 @@
-version: "3.9"
+version: "3.8"
+
+networks:
+  rabbitmq_go_net:
+    driver: bridge
+
 services:
   rabbitmq:
     image: "rabbitmq:3-management"
+    hostname: rabbitmq1
     restart: always
     ports:
       - "15672:15672"
@@ -10,7 +16,7 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
     networks:
-      - app_network
+      - rabbitmq_go_net
 
   producer:
     build: 
@@ -21,7 +27,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - app_network
+      - rabbitmq_go_net
 
   consumer:
     build:
@@ -33,6 +39,3 @@ services:
       - "8081:8081"
     networks:
       - app_network
-
-networks:
-  app_network:
