@@ -32,6 +32,8 @@ type star struct {
 
 var wg sync.WaitGroup
 
+var OK_STATUS = 200
+
 func getDatesBirthAndDeath(data string) []string {
 	regCompile := regexp.MustCompile(`[A-Z][a-z]+\s[0-9]{1,2}\,\s[0-9]{4}`)
 	regex := regCompile.FindAllString(data, -1)
@@ -173,6 +175,10 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		fmt.Println("A new webCrawler was started in go routine")
 		go startWebCrawler(publisher)
+		c.JSON(OK_STATUS, gin.H{
+			"message": "the crawler has just been started",
+		})
+
 	})
 
 	err := r.Run(":8080")
