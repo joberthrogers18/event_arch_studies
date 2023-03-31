@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
-	rabbitmq "github.com/wagslane/go-rabbitmq"
+	"github.com/wagslane/go-rabbitmq"
 )
 
 type movie struct {
@@ -137,19 +137,4 @@ func startWebCrawler(publisher *rabbitmq.Publisher) {
 
 	collyInst.Visit("https://www.imdb.com/search/name/?birth_monthday=12-20")
 	wg.Wait()
-}
-
-func main() {
-	// conn, publisher := initializeRabbitMq()
-
-	// defer conn.Close()
-	// defer publisher.Close()
-
-	// r := gin.Default()
-
-	// err := r.Run(":8080")
-
-	// if err != nil {
-	// 	panic("[Error] failed to started Gin server due to: " + err.Error())
-	// }
 }

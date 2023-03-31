@@ -1,4 +1,4 @@
-module github.com/joberthrogers18/birthdays-today
+module github.com/joberthrogers18/webcrawler_queue
 
 go 1.19
 
