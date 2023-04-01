@@ -10,6 +10,6 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build ./producer/web_crawler.go
+RUN go build ./producer/app.go
 
 CMD [ "./web_crawler" ]

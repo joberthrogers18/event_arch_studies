@@ -33,14 +33,14 @@ var wg sync.WaitGroup
 
 var OK_STATUS = 200
 
-func getDatesBirthAndDeath(data string) []string {
+func GetDatesBirthAndDeath(data string) []string {
 	regCompile := regexp.MustCompile(`[A-Z][a-z]+\s[0-9]{1,2}\,\s[0-9]{4}`)
 	regex := regCompile.FindAllString(data, -1)
 
 	return regex
 }
 
-func crawler(url string, publisher *rabbitmq.Publisher) {
+func GetCrawler(url string, publisher *rabbitmq.Publisher) {
 	defer wg.Done()
 
 	collyInstMain := colly.NewCollector(
@@ -71,7 +71,7 @@ func crawler(url string, publisher *rabbitmq.Publisher) {
 		tmpProfile.Bio = strings.TrimSpace(e.ChildText(".ipc-html-content--baseAlt > .ipc-html-content-inner-div"))
 		birthDayStr := e.ChildText("span.sc-dec7a8b-2.haviXP:nth-child(2)")
 		var middleStr int64 = int64(math.Round(float64(len(birthDayStr) / 2)))
-		var datesActor []string = getDatesBirthAndDeath(birthDayStr[middleStr:])
+		var datesActor []string = GetDatesBirthAndDeath(birthDayStr[middleStr:])
 
 		tmpProfile.BirthDate = "-"
 		if len(datesActor) > 0 {
@@ -118,7 +118,7 @@ func crawler(url string, publisher *rabbitmq.Publisher) {
 	collyInstMain.Visit(url)
 }
 
-func startWebCrawler(publisher *rabbitmq.Publisher) {
+func StartWebCrawler(publisher *rabbitmq.Publisher) {
 
 	collyInst := colly.NewCollector(
 		colly.AllowedDomains("imdb.com", "www.imdb.com"),
@@ -127,7 +127,7 @@ func startWebCrawler(publisher *rabbitmq.Publisher) {
 	collyInst.OnRequest(func(r *colly.Request) {
 		fmt.Println(r.URL.String())
 		wg.Add(1)
-		go crawler(r.URL.String(), publisher)
+		go GetCrawler(r.URL.String(), publisher)
 	})
 
 	collyInst.OnHTML("a.lister-page-next", func(e *colly.HTMLElement) {
