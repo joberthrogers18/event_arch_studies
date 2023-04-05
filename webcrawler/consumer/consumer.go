@@ -11,8 +11,12 @@ import (
 )
 
 func main() {
+	// conn, err := rabbitmq.NewConn(
+	// 	"amqp://guest:guest@rabbitmq:5672/",
+	// 	rabbitmq.WithConnectionOptionsLogging,
+	// )
 	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@rabbitmq:5672/",
+		"amqp://guest:guest@localhost:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 

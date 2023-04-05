@@ -7,8 +7,12 @@ import (
 )
 
 func InitializeRabbitMq() (*rabbitmq.Conn, *rabbitmq.Publisher) {
+	// conn, err := rabbitmq.NewConn(
+	// 	"amqp://rabbitmq:rabbitmq@rabbitmq1/",
+	// 	rabbitmq.WithConnectionOptionsLogging,
+	// )
 	conn, err := rabbitmq.NewConn(
-		"amqp://rabbitmq:rabbitmq@rabbitmq1/",
+		"amqp://guest:guest@localhost:5672/",
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 
